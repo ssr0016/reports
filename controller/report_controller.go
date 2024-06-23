@@ -27,6 +27,7 @@ func (controller *ReportController) Create(ctx *gin.Context) {
 	controller.reportService.Create(ctx, reportCreateRequest)
 	webResponse := response.Response{
 		Code:    http.StatusOK,
+		Status:  "OK",
 		Message: "Success",
 		Data:    nil,
 	}
@@ -40,9 +41,11 @@ func (controller *ReportController) FindById(ctx *gin.Context) {
 	id, err := strconv.Atoi(reportId)
 	helper.ErrorPanic(err)
 
-	result := controller.reportService.FindById(ctx, id)
+	result, err := controller.reportService.FindById(ctx, id)
+	helper.ErrorPanic(err)
 	webResponse := response.Response{
 		Code:    http.StatusOK,
+		Status:  "OK",
 		Message: "Success",
 		Data:    result,
 	}
@@ -55,6 +58,7 @@ func (controller *ReportController) FindAll(ctx *gin.Context) {
 	tagsResponse := controller.reportService.FindAll(ctx)
 	webResponse := response.Response{
 		Code:    http.StatusOK,
+		Status:  "OK",
 		Message: "Success",
 		Data:    tagsResponse,
 	}
@@ -72,6 +76,7 @@ func (controller *ReportController) Delete(ctx *gin.Context) {
 
 	webResponse := response.Response{
 		Code:    http.StatusOK,
+		Status:  "OK",
 		Message: "Success",
 		Data:    nil,
 	}
@@ -91,9 +96,11 @@ func (controller *ReportController) Update(ctx *gin.Context) {
 
 	updateTagsRequest.Id = id
 
-	controller.reportService.Update(ctx, updateTagsRequest)
+	err = controller.reportService.Update(ctx, updateTagsRequest)
+	helper.ErrorPanic(err)
 	webResponse := response.Response{
 		Code:    http.StatusOK,
+		Status:  "OK",
 		Message: "Success",
 		Data:    nil,
 	}

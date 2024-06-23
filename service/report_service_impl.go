@@ -7,6 +7,7 @@ import (
 	"reports/helper"
 	"reports/model"
 	"reports/repository"
+	"time"
 )
 
 type ReportServiceImpl struct {
@@ -17,14 +18,32 @@ func NewReportServiceImpl(reportRepository repository.ReportRepository) ReportSe
 	return &ReportServiceImpl{reportRepository: reportRepository}
 }
 
-func (r *ReportServiceImpl) Create(ctx context.Context, request request.ReportCreateRequest) {
-	report := model.Report{
-		MonthOf:          request.MonthOf,
-		AreaOfAssignment: request.AreaOfAssignment,
-		NameOfChurch:     request.NameOfChurch,
+func (r *ReportServiceImpl) Create(ctx context.Context, request request.ReportCreateRequest) error {
+	loc, err := time.LoadLocation("Asia/Manila")
+	if err != nil {
+		helper.ErrorPanic(err)
 	}
 
-	r.reportRepository.Save(ctx, report)
+	now := time.Now().In(loc)
+
+	report := model.Report{
+		MonthOf:          request.MonthOf,
+		WorkerName:       request.WorkerName,
+		AreaOfAssignment: request.AreaOfAssignment,
+		NameOfChurch:     request.NameOfChurch,
+		WorshipService:   request.WorshipService,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+
+	report.CalculateAverage()
+
+	err = r.reportRepository.Save(ctx, report)
+	if err != nil {
+		helper.ErrorPanic(err)
+	}
+
+	return err
 }
 
 func (r *ReportServiceImpl) Delete(ctx context.Context, reportId int) {
@@ -40,10 +59,15 @@ func (r *ReportServiceImpl) FindAll(ctx context.Context) []response.ReportRespon
 
 	for _, value := range reports {
 		report := response.ReportResponse{
-			Id:               value.Id,
-			MonthOf:          value.MonthOf,
-			AreaOfAssignment: value.AreaOfAssignment,
-			NameOfChurch:     value.NameOfChurch,
+			Id:                value.Id,
+			MonthOf:           value.MonthOf,
+			WorkerName:        value.WorkerName,
+			AreaOfAssignment:  value.AreaOfAssignment,
+			NameOfChurch:      value.NameOfChurch,
+			WorshipService:    value.WorshipService,
+			AverageAttendance: value.AverageAttendance,
+			CreatedAt:         value.CreatedAt,
+			UpdatedAt:         value.UpdatedAt,
 		}
 
 		reportResp = append(reportResp, report)
@@ -52,19 +76,22 @@ func (r *ReportServiceImpl) FindAll(ctx context.Context) []response.ReportRespon
 	return reportResp
 }
 
-func (r *ReportServiceImpl) FindById(ctx context.Context, reportId int) response.ReportResponse {
+func (r *ReportServiceImpl) FindById(ctx context.Context, reportId int) (response.ReportResponse, error) {
 	report, err := r.reportRepository.FindById(ctx, reportId)
 	helper.ErrorPanic(err)
-	return response.ReportResponse(report)
+	return response.ReportResponse(report), nil
 }
 
-func (r *ReportServiceImpl) Update(ctx context.Context, request request.ReportUpdateRequest) {
+func (r *ReportServiceImpl) Update(ctx context.Context, request request.ReportUpdateRequest) error {
 	report, err := r.reportRepository.FindById(ctx, request.Id)
 	helper.ErrorPanic(err)
 
 	report.MonthOf = request.MonthOf
+	report.WorkerName = request.WorkerName
 	report.AreaOfAssignment = request.AreaOfAssignment
 	report.NameOfChurch = request.NameOfChurch
 
 	r.reportRepository.Update(ctx, report)
+
+	return nil
 }

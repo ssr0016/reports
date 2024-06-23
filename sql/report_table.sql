@@ -1,6 +1,7 @@
 CREATE TABLE reports (
     id SERIAL PRIMARY KEY,
     month_of VARCHAR(100) NOT NULL,
+    worker_name VARCHAR(100) NOT NULL,
     area_of_assignment VARCHAR(100) NOT NULL,
     name_of_church VARCHAR(100) NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
